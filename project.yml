@@ -2,7 +2,7 @@ title: "Prodigy recipes for document processing and layout understanding"
 
 directories:
   - "assets"
-  - "images"
+  - "dataset"
 
 assets:
   - dest: "assets/funsd.zip"

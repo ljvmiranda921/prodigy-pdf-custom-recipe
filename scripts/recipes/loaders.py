@@ -1,15 +1,15 @@
 import base64
 import json
-import zipfile
 from pathlib import Path
 from typing import Union
 
-
-from prodigy.components import connect
 from wasabi import msg
+
+from ..preprocess import unzip_file
 
 try:
     import prodigy
+    from prodigy.components import connect
 except ImportError:
     msg.fail("No installation of prodigy found")
     raise
@@ -18,10 +18,10 @@ except ImportError:
 @prodigy.recipe(
     "db-in-image",
     set_id=("Dataset to import annotations to", "positional", None, str),
-    in_dir=("Path to images annotations directory", None, str),
+    in_dir=("Path to the directory containing the images and annotations", None, str),
     answer=("Set this answer key if none is present", "option", "a", str),
 )
-def db_in_image(set_id: str, in_file: Union[str, Path], answer: str = "accept"):
+def db_in_image(set_id: str, in_dir: Union[str, Path], answer: str = "accept"):
     """Import annotations to the database
 
     This assumes that the filename of the annotations is the same as the
@@ -29,8 +29,4 @@ def db_in_image(set_id: str, in_file: Union[str, Path], answer: str = "accept"):
     representation and then saved to the database.
 
     """
-    pass
-
-
-def unzip_file(in_dir: Path, out_dir: Path):
     pass
