@@ -1,5 +1,8 @@
+import base64
+import json
 import sys
-from typing import Path, Union
+from pathlib import Path
+from typing import Union
 
 from prodigy.components import connect
 from wasabi import msg
@@ -14,7 +17,7 @@ except ImportError:
 @prodigy.recipe(
     "db-in-image",
     set_id=("Dataset to import annotations to", "positional", None, str),
-    in_file=("Path to images annotations file", None, str),
+    in_dir=("Path to images annotations directory", None, str),
     answer=("Set this answer key if none is present", "option", "a", str),
 )
 def db_in_image(set_id: str, in_file: Union[str, Path], answer: str = "accept"):

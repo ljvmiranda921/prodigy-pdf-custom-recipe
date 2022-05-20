@@ -1,5 +1,6 @@
 import sys
-from typing import Path, Union
+from pathlib import Path
+from typing import Union
 
 from wasabi import msg
 
