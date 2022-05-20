@@ -1,4 +1,3 @@
-import sys
 from pathlib import Path
 from typing import Union
 
@@ -8,7 +7,7 @@ try:
     import prodigy
 except ImportError:
     msg.fail("No installation of prodigy found")
-    sys.exit()
+    raise
 
 
 @prodigy.recipe(

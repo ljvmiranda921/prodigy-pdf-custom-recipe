@@ -1,8 +1,10 @@
 import base64
 import json
 import sys
+import zipfile
 from pathlib import Path
 from typing import Union
+
 
 from prodigy.components import connect
 from wasabi import msg
@@ -11,7 +13,7 @@ try:
     import prodigy
 except ImportError:
     msg.fail("No installation of prodigy found")
-    sys.exit()
+    raise
 
 
 @prodigy.recipe(
@@ -28,4 +30,8 @@ def db_in_image(set_id: str, in_file: Union[str, Path], answer: str = "accept"):
     representation and then saved to the database.
 
     """
+    pass
+
+
+def unzip_file(path: Path):
     pass
