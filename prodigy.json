@@ -1,0 +1,48 @@
+{
+  "theme": "basic",
+  "custom_theme": {},
+  "buttons": [
+    "accept",
+    "reject",
+    "ignore",
+    "undo"
+  ],
+  "batch_size": 10,
+  "history_size": 10,
+  "port": 8080,
+  "host": "localhost",
+  "cors": true,
+  "db": "sqlite",
+  "db_settings": {},
+  "validate": true,
+  "auto_exclude_current": true,
+  "instant_submit": false,
+  "feed_overlap": false,
+  "auto_count_stream": false,
+  "total_examples_target": 0,
+  "ui_lang": "en",
+  "project_info": [
+    "dataset",
+    "session",
+    "lang",
+    "recipe_name",
+    "view_id",
+    "label"
+  ],
+  "show_stats": false,
+  "hide_meta": false,
+  "show_flag": false,
+  "instructions": false,
+  "swipe": false,
+  "swipe_gestures": {
+    "left": "accept",
+    "right": "reject"
+  },
+  "split_sents_threshold": false,
+  "html_template": false,
+  "global_css": null,
+  "javascript": null,
+  "writing_dir": "ltr",
+  "show_whitespace": false,
+  "exclude_by": "task"
+}
