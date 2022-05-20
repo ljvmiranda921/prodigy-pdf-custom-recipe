@@ -19,3 +19,8 @@ commands:
     script:
       - "python -m scripts.preprocess assets/funsd.zip dataset/"
       - "prodigy db-in-image funsd dataset/dataset/training_data -F scripts/recipes/loaders.py"
+  - name: "clean"
+    help: "Clean all intermediary files"
+    script:
+      - "sh -c 'rm -rf assets/*'"
+      - "sh -c 'rm -rf dataset/*'"

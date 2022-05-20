@@ -5,11 +5,9 @@ from typing import Union
 
 from wasabi import msg
 
-from ..preprocess import unzip_file
-
 try:
     import prodigy
-    from prodigy.components import connect
+    from prodigy.components.db import connect
 except ImportError:
     msg.fail("No installation of prodigy found")
     raise
