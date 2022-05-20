@@ -1,13 +1,15 @@
 import base64
 import json
 from pathlib import Path
-from typing import Union, Dict, List
+from typing import Dict, List, Union
 
 from wasabi import msg
+
 from scripts.constants import TRAIN_IMAGES, TRAIN_LABELS
 
 try:
     import prodigy
+    from prodigy import set_hashes
     from prodigy.components.db import connect
 except ImportError:
     msg.fail("No installation of prodigy found")
@@ -25,7 +27,7 @@ def _bbox_to_poly(bbox: List) -> List[List[int]]:
     ]
 
 
-def _create_task(file_id: str) -> Dict:
+def _create_task(file_id: str, answer: str = "accept") -> Dict:
     """Create a Prodigy task dictionary given a file ID
 
     Since we already have annotations, we will be following the image.manual
@@ -45,7 +47,7 @@ def _create_task(file_id: str) -> Dict:
         {"points": _bbox_to_poly(a["box"]), "label": a["label"]} for a in annot["form"]
     ]
 
-    task = {"image": img_b64, "spans": spans}
+    task = set_hashes({"image": img_b64, "spans": spans})
     return task
 
 
@@ -73,7 +75,7 @@ def db_in_image(set_id: str, in_dir: Union[str, Path], answer: str = "accept"):
     # For each file ID, prepare the sample and format
     # them to Prodigy's task format as seen in this link:
     # https://prodi.gy/docs/api-interfaces#image_manual
-    examples = [_create_task(_id) for _id in file_ids]
+    examples = [_create_task(_id, answer) for _id in file_ids]
 
     db = connect()
     db.add_dataset(set_id)
