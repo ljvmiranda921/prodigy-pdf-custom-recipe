@@ -1,6 +1,5 @@
 import base64
 import json
-import sys
 import zipfile
 from pathlib import Path
 from typing import Union
@@ -33,5 +32,5 @@ def db_in_image(set_id: str, in_file: Union[str, Path], answer: str = "accept"):
     pass
 
 
-def unzip_file(path: Path):
+def unzip_file(in_dir: Path, out_dir: Path):
     pass
