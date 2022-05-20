@@ -7,4 +7,4 @@ directories:
 assets:
   - dest: "assets/funsd.zip"
     description: "FUNSD dataset - noisy scanned documents for layout understanding"
-    url: https://https://guillaumejaume.github.io/FUNSD/dataset.zip
+    url: https://guillaumejaume.github.io/FUNSD/dataset.zip
