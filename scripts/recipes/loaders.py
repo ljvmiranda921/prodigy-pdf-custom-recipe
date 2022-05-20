@@ -17,9 +17,11 @@ except ImportError:
 
 @prodigy.recipe(
     "db-in-image",
+    # fmt: off
     set_id=("Dataset to import annotations to", "positional", None, str),
-    in_dir=("Path to the directory containing the images and annotations", None, str),
+    in_dir=("Path to the directory containing the images and annotations", "positional", None, str),
     answer=("Set this answer key if none is present", "option", "a", str),
+    # fmt: on
 )
 def db_in_image(set_id: str, in_dir: Union[str, Path], answer: str = "accept"):
     """Import annotations to the database

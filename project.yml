@@ -8,3 +8,14 @@ assets:
   - dest: "assets/funsd.zip"
     description: "FUNSD dataset - noisy scanned documents for layout understanding"
     url: https://guillaumejaume.github.io/FUNSD/dataset.zip
+
+commands:
+  - name: "install"
+    help: "Install dependencies"
+    script:
+      - "pip install --user -r requirements.txt"
+  - name: "hydrate-db"
+    help: "Hydrate the Prodigy database with annotated data from FUNSD"
+    script:
+      - "python -m scripts.preprocess assets/funsd.zip dataset/"
+      - "prodigy db-in-image funsd dataset/dataset/training_data -F scripts/recipes/loaders.py"
