@@ -16,7 +16,7 @@ except ImportError:
     raise
 
 
-def _bbox_to_poly(bbox: List) -> List[List[int]]:
+def _to_poly(bbox: List) -> List[List[int]]:
     """Convert bounding box into polygon coordinates"""
     x_left, y_top, x_right, y_bottom = bbox
     return [
@@ -37,19 +37,15 @@ def _create_task(file_id: str, answer: str = "accept", encode_b64: bool = True) 
     image_fp = TRAIN_IMAGES / f"{file_id}.png"
     with open(image_fp, "rb") as f:
         img = f.read()
-    source_img = (
-        base64.encodebytes(img).decode("utf-8") if encode_b64 else str(image_fp)
-    )
+    source = base64.encodebytes(img).decode("utf-8") if encode_b64 else str(image_fp)
 
     # Format the annotations
     annot_fp = TRAIN_LABELS / f"{file_id}.json"
     with open(annot_fp) as f:
         annot = json.load(f)
-    spans = [
-        {"points": _bbox_to_poly(a["box"]), "label": a["label"]} for a in annot["form"]
-    ]
+    spans = [{"points": _to_poly(a["box"]), "label": a["label"]} for a in annot["form"]]
 
-    task = set_hashes({"image": source_img, "spans": spans, "answer": answer})
+    task = set_hashes({"image": source, "spans": spans, "answer": answer})
     return task
 
 
