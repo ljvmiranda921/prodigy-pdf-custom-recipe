@@ -21,23 +21,25 @@ def _bbox_to_poly(bbox: List) -> List[List[int]]:
     x_left, y_top, x_right, y_bottom = bbox
     return [
         [x_left, y_top],
+        [x_right, y_top],
         [x_right, y_bottom],
-        [x_left + x_right, y_top],
-        [x_right - x_left, y_bottom],
+        [x_left, y_bottom],
     ]
 
 
-def _create_task(file_id: str, answer: str = "accept") -> Dict:
+def _create_task(file_id: str, answer: str = "accept", encode_b64: bool = True) -> Dict:
     """Create a Prodigy task dictionary given a file ID
 
     Since we already have annotations, we will be following the image.manual
     task format: https://prodi.gy/docs/api-interfaces#image_manual
     """
-    # Load the image and get its base64 representation
+    # Load the image and get its b64 representation if needed
     image_fp = TRAIN_IMAGES / f"{file_id}.png"
     with open(image_fp, "rb") as f:
         img = f.read()
-    img_b64 = base64.encodebytes(img).decode("utf-8")
+    source_img = (
+        base64.encodebytes(img).decode("utf-8") if encode_b64 else str(image_fp)
+    )
 
     # Format the annotations
     annot_fp = TRAIN_LABELS / f"{file_id}.json"
@@ -47,7 +49,7 @@ def _create_task(file_id: str, answer: str = "accept") -> Dict:
         {"points": _bbox_to_poly(a["box"]), "label": a["label"]} for a in annot["form"]
     ]
 
-    task = set_hashes({"image": img_b64, "spans": spans})
+    task = set_hashes({"image": source_img, "spans": spans, "answer": answer})
     return task
 
 
@@ -55,15 +57,19 @@ def _create_task(file_id: str, answer: str = "accept") -> Dict:
     "db-in-image",
     # fmt: off
     set_id=("Dataset to import annotations to", "positional", None, str),
-    in_dir=("Path to the directory containing the images and annotations", "positional", None, str),
     answer=("Set this answer key if none is present", "option", "a", str),
+    encode_b64=("Encode to base64 before storing to db", "flag", "e", bool)
     # fmt: on
 )
-def db_in_image(set_id: str, in_dir: Union[str, Path], answer: str = "accept"):
+def db_in_image(
+    set_id: str,
+    answer: str = "accept",
+    encode_b64: bool = False,
+):
     """Import annotations to the database
 
     This assumes that the filename of the annotations is the same as the
-    filename of the images. The images are encoded into its base-64
+    filename of the images. The images can be encoded into their base-64
     representation and then saved to the database.
     """
 
@@ -75,7 +81,9 @@ def db_in_image(set_id: str, in_dir: Union[str, Path], answer: str = "accept"):
     # For each file ID, prepare the sample and format
     # them to Prodigy's task format as seen in this link:
     # https://prodi.gy/docs/api-interfaces#image_manual
-    examples = [_create_task(_id, answer) for _id in file_ids]
+    if encode_b64:
+        msg.info("Encoding images into their base64 representation")
+    examples = [_create_task(_id, answer, encode_b64) for _id in file_ids]
 
     db = connect()
     db.add_dataset(set_id)

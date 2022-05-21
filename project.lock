@@ -11,7 +11,7 @@ hydrate-db:
   cmd: python -m spacy run hydrate-db
   script:
     - python -m scripts.preprocess assets/funsd.zip dataset/
-    - prodigy db-in-image funsd dataset/dataset/training_data -F scripts/recipes/loaders.py
+    - python -m prodigy db-in-image funsd -F scripts/recipes/loaders.py
   deps: []
   outs: []
   spacy_version: 3.2.4
