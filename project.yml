@@ -32,11 +32,11 @@ commands:
   - name: "review"
     help: "Review hydrated annotations"
     script:
-      - "python -m prodigy db-out ${vars.dataset_name} assets"
+      - "python -m prodigy db-out ${vars.dataset_name} dataset"
       - >-
         python -m prodigy image.manual 
         ${vars.dataset_name}-debug 
-        assets/${vars.dataset_name}.jsonl 
+        dataset/${vars.dataset_name}.jsonl 
         --loader jsonl 
         --label question,answer,header,other
 
