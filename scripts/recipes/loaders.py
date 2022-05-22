@@ -27,25 +27,34 @@ def _to_poly(bbox: List) -> List[List[int]]:
     ]
 
 
-def _create_task(file_id: str, answer: str = "accept", encode_b64: bool = True) -> Dict:
-    """Create a Prodigy task dictionary given a file ID
+def get_ids(reference: Path) -> List:
+    files = reference.glob("**/*")
+    ids = [f.stem for f in files if f.is_file()]
+    return ids
 
-    Since we already have annotations, we will be following the image.manual
-    task format: https://prodi.gy/docs/api-interfaces#image_manual
-    """
-    # Load the image and get its b64 representation if needed
-    image_fp = TRAIN_IMAGES / f"{file_id}.png"
+
+def get_image(id: str, encode_b64: bool, images_dir: Union[Path, str]) -> str:
+    """Get the image and return its path or base64 representation"""
+    image_fp = images_dir / f"{id}.png"
     with open(image_fp, "rb") as f:
         img = f.read()
     source = base64.encodebytes(img).decode("utf-8") if encode_b64 else str(image_fp)
+    return source
 
-    # Format the annotations
-    annot_fp = TRAIN_LABELS / f"{file_id}.json"
+
+def get_labels(id: str, labels_dir: Union[Path, str]) -> Dict:
+    """Get the labels given a file ID"""
+    annot_fp = labels_dir / f"{id}.json"
     with open(annot_fp) as f:
         annot = json.load(f)
-    spans = [{"points": _to_poly(a["box"]), "label": a["label"]} for a in annot["form"]]
+    return annot
 
-    task = set_hashes({"image": source, "spans": spans, "answer": answer})
+
+def create_task(image: str, label: Dict, answer: str = "accept") -> Dict:
+    """Create a Prodigy task given the image and its label"""
+    # https://prodi.gy/docs/api-interfaces#image_manual
+    spans = [{"points": _to_poly(a["box"]), "label": a["label"]} for a in label["form"]]
+    task = set_hashes({"image": image, "spans": spans, "answer": answer})
     return task
 
 
@@ -53,12 +62,16 @@ def _create_task(file_id: str, answer: str = "accept", encode_b64: bool = True) 
     "db-in-image",
     # fmt: off
     set_id=("Dataset to import annotations to", "positional", None, str),
+    images_dir=("Path to the images directory", "option", "i", str),
+    labels_dir=("Path to the annotations directory", "option", "l", str),
     answer=("Set this answer key if none is present", "option", "a", str),
     encode_b64=("Encode to base64 before storing to db", "flag", "e", bool)
     # fmt: on
 )
 def db_in_image(
     set_id: str,
+    images_dir: Union[str, Path] = TRAIN_IMAGES,
+    labels_dir: Union[str, Path] = TRAIN_LABELS,
     answer: str = "accept",
     encode_b64: bool = False,
 ):
@@ -70,16 +83,15 @@ def db_in_image(
     """
 
     # Get all file IDs
-    files = TRAIN_IMAGES.glob("**/*")
-    file_ids = [f.stem for f in files if f.is_file()]
-    msg.info(f"Found {len(file_ids)} images and annotations")
+    ids = get_ids(labels_dir)
+    msg.info(f"Found {len(ids)} images and annotations")
 
-    # For each file ID, prepare the sample and format
-    # them to Prodigy's task format as seen in this link:
-    # https://prodi.gy/docs/api-interfaces#image_manual
-    if encode_b64:
-        msg.info("Encoding images into their base64 representation")
-    examples = [_create_task(_id, answer, encode_b64) for _id in file_ids]
+    examples = []
+    for id in ids:
+        image = get_image(id, encode_b64=encode_b64, images_dir=images_dir)
+        label = get_labels(id, labels_dir=labels_dir)
+        task = create_task(image, label, answer)
+        examples.append(task)
 
     db = connect()
     db.add_dataset(set_id)
