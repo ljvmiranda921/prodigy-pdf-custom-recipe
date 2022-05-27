@@ -12,8 +12,7 @@ try:
     from prodigy import set_hashes
     from prodigy.components.db import connect
 except ImportError:
-    msg.fail("No installation of prodigy found")
-    raise
+    msg.fail("No installation of prodigy found", exits=1)
 
 
 def _to_poly(bbox: List) -> List[List[int]]:
