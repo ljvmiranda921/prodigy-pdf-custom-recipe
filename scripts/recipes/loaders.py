@@ -52,7 +52,18 @@ def get_labels(id: str, labels_dir: Union[Path, str]) -> Dict:
 def create_task(image: str, label: Dict, answer: str = "accept") -> Dict:
     """Create a Prodigy task given the image and its label"""
     # https://prodi.gy/docs/api-interfaces#image_manual
-    spans = [{"points": _to_poly(a["box"]), "label": a["label"]} for a in label["form"]]
+    spans = [
+        {
+            "points": _to_poly(a["box"]),
+            "label": a["label"],
+            # The image_manual only needs the 'points' and 'label'
+            # keys, but we also need to save the bbox and text info
+            # for downstream training.
+            "bbox": a["box"],
+            "text": a["text"],
+        }
+        for a in label["form"]
+    ]
     task = set_hashes({"image": image, "spans": spans, "answer": answer})
     return task
 
