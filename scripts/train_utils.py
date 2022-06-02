@@ -1,10 +1,12 @@
-from typing import Dict, List, Union
+from typing import Callable, Dict, List, Literal, NamedTuple, Union
 
 import numpy as np
 from datasets import Array2D, Array3D, ClassLabel, Dataset, Features, Image
 from datasets import Sequence, Value, load_metric
 from PIL import Image as PILImage
-from transformers import AutoProcessor
+from transformers import AutoProcessor, LayoutLMv3ForTokenClassification
+from transformers import Trainer, TrainingArguments
+from transformers.data.data_collator import default_data_collator
 from wasabi import msg
 
 try:
@@ -46,9 +48,7 @@ def examples_to_hf_dataset(examples: List[TaskType], test_size: float = 0.2) -> 
     return dataset
 
 
-def preprocess_dataset(
-    dataset: Dataset, model: str = "microsoft/layoutlmv3-base"
-) -> Union[Dataset, Dataset, Dict, Dict]:
+def preprocess_dataset(dataset: Dataset, model: str = "microsoft/layoutlmv3-base"):
     """Preprocess the whole dataset to make it compatible with the LayoutLMv3 model
 
     Source: https://github.com/NielsRogge/Transformers-Tutorials/blob/master/LayoutLMv3/Fine_tune_LayoutLMv3_on_FUNSD_(HuggingFace_Trainer).ipynb
@@ -121,4 +121,95 @@ def preprocess_dataset(
         features=new_features,
     )
 
-    return train_dataset, dev_dataset, id2label, label2id
+    return train_dataset, dev_dataset, processor, id2label, label2id
+
+
+def compute_metrics(
+    label_list: List, return_entity_level_metrics: bool = False
+) -> Callable:
+    """Returns a metric function that is passed to the Trainer for computing metrics
+
+    Source: https://github.com/NielsRogge/Transformers-Tutorials/blob/master/LayoutLMv3/Fine_tune_LayoutLMv3_on_FUNSD_(HuggingFace_Trainer).ipynb
+    """
+    metric = load_metric("seqeval")
+
+    def _compute_metrics(p: NamedTuple) -> Dict:
+        predictions, labels = p
+        predictions = np.argmax(predictions, axis=2)
+
+        # Remove ignored index (special tokens)
+        true_predictions = [
+            [label_list[p] for (p, l) in zip(prediction, label) if l != -100]
+            for prediction, label in zip(predictions, labels)
+        ]
+        true_labels = [
+            [label_list[l] for (p, l) in zip(prediction, label) if l != -100]
+            for prediction, label in zip(predictions, labels)
+        ]
+
+        results = metric.compute(predictions=true_predictions, references=true_labels)
+        if return_entity_level_metrics:
+            # Unpack nested dictionaries
+            final_results = {}
+            for key, value in results.items():
+                if isinstance(value, dict):
+                    for n, v in value.items():
+                        final_results[f"{key}_{n}"] = v
+                else:
+                    final_results[key] = value
+            return final_results
+        else:
+            return {
+                "precision": results["overall_precision"],
+                "recall": results["overall_recall"],
+                "f1": results["overall_f1"],
+                "accuracy": results["overall_accuracy"],
+            }
+
+    return _compute_metrics
+
+
+def setup_trainer(
+    train_dataset: Dataset,
+    dev_dataset: Dataset,
+    processor,
+    id2label: Dict,
+    label2id: Dict,
+    compute_metrics: Callable,
+    output_dir: str,
+    max_steps: int = 1000,
+    per_device_train_batch_size: int = 2,
+    per_device_eval_batch_size: int = 2,
+    learning_rate: float = 1e-5,
+    evaluation_strategy: str = "steps",
+    eval_steps: int = 100,
+    load_best_model_at_end: bool = True,
+    metric_for_best_model: Literal["precision", "f1", "recall", "accuracy"] = "f1",
+) -> Trainer:
+    model = LayoutLMv3ForTokenClassification.from_pretrained(
+        "microsoft/layoutlmv3-base", id2label=id2label, label2id=label2id
+    )
+
+    training_args = TrainingArguments(
+        output_dir=output_dir,
+        max_steps=max_steps,
+        per_device_train_batch_size=per_device_train_batch_size,
+        per_device_eval_batch_size=per_device_eval_batch_size,
+        learning_rate=learning_rate,
+        evaluation_strategy=evaluation_strategy,
+        eval_steps=eval_steps,
+        load_best_model_at_end=load_best_model_at_end,
+        metric_for_best_model=metric_for_best_model,
+    )
+
+    trainer = Trainer(
+        model=model,
+        args=training_args,
+        train_dataset=train_dataset,
+        eval_dataset=dev_dataset,
+        tokenizer=processor,
+        data_collator=default_data_collator,
+        compute_metrics=compute_metrics,
+    )
+
+    return trainer
