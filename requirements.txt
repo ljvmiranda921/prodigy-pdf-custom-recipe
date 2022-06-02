@@ -1,5 +1,6 @@
-transformers
+git+https://github.com/huggingface/transformers.git@31ee80d#egg=transformers
 datasets
 spacy
 typer
+seqeval
 Pillow
