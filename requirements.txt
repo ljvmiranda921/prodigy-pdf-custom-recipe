@@ -1,3 +1,4 @@
+--extra-index-url https://download.pytorch.org/whl/cu113
 git+https://github.com/huggingface/transformers.git@31ee80d#egg=transformers
 torch
 datasets
