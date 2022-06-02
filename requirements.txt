@@ -1,4 +1,5 @@
 git+https://github.com/huggingface/transformers.git@31ee80d#egg=transformers
+torch
 datasets
 spacy
 typer
