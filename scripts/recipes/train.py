@@ -1,9 +1,13 @@
 from pathlib import Path
-from typing import List, Union
+from platform import processor
+from typing import List, Union, Dict
 
-from datasets import ClassLabel, Dataset
-from datasets import Features, Image, Sequence, Value, load_dataset
+from datasets import ClassLabel, Dataset, Array2D, Array3D
+from datasets import Features, Image, Sequence, Value, load_metric
+from PIL import Image as PILImage
+from transformers import AutoProcessor
 from wasabi import msg
+
 
 try:
     import prodigy
@@ -30,7 +34,7 @@ def get_examples(database: db.Database, set_id: str) -> List[TaskType]:
     return result
 
 
-def examples_to_hf_dataset(examples: List[TaskType]) -> Dataset:
+def examples_to_hf_dataset(examples: List[TaskType], test_size: float = 0.2) -> Dataset:
     """Convert a list of Prodigy examples into a dataset"""
     features = Features(
         {
@@ -50,13 +54,92 @@ def examples_to_hf_dataset(examples: List[TaskType]) -> Dataset:
         "tokens": [[span["text"] for span in eg["spans"]] for eg in examples],
         "bboxes": [[span["bbox"] for span in eg["spans"]] for eg in examples],
         "ner_tags": [[CLASS_NAMES.index(span["label"]) for span in eg["spans"]] for eg in examples],
-        "image": [eg["image"] for eg in examples],
+        "image": [PILImage.open(eg["image"]).convert("RGB") for eg in examples],
         # fmt: on
     }
 
-    dataset = Dataset.from_dict(dataset_dict, features=features)
-    dataset = dataset.cast_column("image", Image())
+    dataset = Dataset.from_dict(dataset_dict, features=features).train_test_split(
+        test_size=test_size
+    )
     return dataset
+
+
+def preprocess_dataset(
+    dataset: Dataset, model: str = "microsoft/layoutlmv3-base"
+) -> Union[Dataset, Dataset, Dict, Dict]:
+    """Preprocess the whole dataset to make it compatible with the LayoutLMv3 model
+
+    Source: https://github.com/NielsRogge/Transformers-Tutorials/blob/master/LayoutLMv3/Fine_tune_LayoutLMv3_on_FUNSD_(HuggingFace_Trainer).ipynb
+
+    Returns the processed trained and eval datasets and id2label and label2id
+    mappings respectively.
+    """
+    processor = AutoProcessor.from_pretrained(model, apply_ocr=False)
+
+    features = dataset["train"].features
+    column_names = dataset["train"].column_names
+    image_column_name = "image"
+    text_column_name = "tokens"
+    boxes_column_name = "bboxes"
+    label_column_name = "ner_tags"
+
+    def _get_label_list(labels):
+        unique_labels = set()
+        for label in labels:
+            unique_labels = unique_labels | set(label)
+        label_list = list(unique_labels)
+        label_list.sort()
+        return label_list
+
+    if isinstance(features[label_column_name].feature, ClassLabel):
+        label_list = features[label_column_name].feature.names
+    else:
+        label_list = _get_label_list(dataset["train"][label_column_name])
+
+    id2label = {k: v for k, v in enumerate(label_list)}
+    label2id = {v: k for k, v in enumerate(label_list)}
+
+    def _prepare_examples(examples):
+        """Mapper function"""
+        images = examples[image_column_name]
+        words = examples[text_column_name]
+        boxes = examples[boxes_column_name]
+        word_labels = examples[label_column_name]
+        encoding = processor(
+            images,
+            words,
+            boxes=boxes,
+            word_labels=word_labels,
+            truncation=True,
+            padding="max_length",
+        )
+        return encoding
+
+    new_features = Features(
+        {
+            "pixel_values": Array3D(dtype="float32", shape=(3, 224, 224)),
+            "input_ids": Sequence(feature=Value(dtype="int64")),
+            "attention_mask": Sequence(Value(dtype="int64")),
+            "bbox": Array2D(dtype="int64", shape=(512, 4)),
+            "labels": Sequence(ClassLabel(names=label_list)),
+        }
+    )
+
+    train_dataset = dataset["train"].map(
+        _prepare_examples,
+        batched=True,
+        remove_columns=column_names,
+        features=new_features,
+    )
+    train_dataset.set_format("torch")
+    dev_dataset = dataset["test"].map(
+        _prepare_examples,
+        batched=True,
+        remove_columns=column_names,
+        features=new_features,
+    )
+
+    return train_dataset, dev_dataset, id2label, label2id
 
 
 @prodigy.recipe(
@@ -74,7 +157,13 @@ def train_image(
 ):
     DB = db.connect()
     examples = get_examples(DB, set_id=dataset)
-    dataset = examples_to_hf_dataset(examples)
+    hf_dataset = examples_to_hf_dataset(examples)
+    msg.good(f"Loaded examples from '{dataset}'")
+
+    train, dev, id2label, label2id = preprocess_dataset(hf_dataset)
+    msg.text("Training dataset features")
+    for k, v in train[0].items():
+        msg.text(f"{k}: {v.shape}", show=verbose)
 
     # Train model
     pass
