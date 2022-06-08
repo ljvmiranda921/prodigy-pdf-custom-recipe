@@ -3,6 +3,7 @@ title: "Prodigy recipes for document processing and layout understanding"
 directories:
   - "assets"
   - "dataset"
+  - "model"
 
 vars:
   dataset_name: funsd
@@ -39,6 +40,13 @@ commands:
         dataset/${vars.dataset_name}.jsonl 
         --loader jsonl 
         --label question,answer,header,other
+
+  - name: "train"
+    help: "Train FUNSD model"
+    script:
+      - >-
+        python -m prodigy train-image ${vars.dataset_name} model/
+        -F scripts/recipes/train.py --verbose --eval
 
   - name: "clean-db"
     help: "Drop all generated Prodigy datasets"
