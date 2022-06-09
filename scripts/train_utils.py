@@ -1,4 +1,4 @@
-from typing import Callable, Dict, Literal, NamedTuple, Union
+from typing import Callable, Dict, List, NamedTuple, Union
 
 import numpy as np
 from datasets import Array2D, Array3D, ClassLabel, Dataset, Features, Image
@@ -184,7 +184,7 @@ def setup_trainer(
     evaluation_strategy: str = "steps",
     eval_steps: int = 100,
     load_best_model_at_end: bool = True,
-    metric_for_best_model: Literal["precision", "f1", "recall", "accuracy"] = "f1",
+    metric_for_best_model: str = "f1",
 ) -> Trainer:
     model = LayoutLMv3ForTokenClassification.from_pretrained(
         "microsoft/layoutlmv3-base", id2label=id2label, label2id=label2id
