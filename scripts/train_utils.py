@@ -1,4 +1,4 @@
-from typing import Callable, Dict, List, Literal, NamedTuple, Union
+from typing import Callable, Dict, Literal, NamedTuple, Union
 
 import numpy as np
 from datasets import Array2D, Array3D, ClassLabel, Dataset, Features, Image
