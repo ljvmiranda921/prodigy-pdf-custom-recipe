@@ -14,9 +14,13 @@ assets:
     url: https://guillaumejaume.github.io/FUNSD/dataset.zip
 
 workflows:
+  all:
+    - "install"
+    - "hydrate-db"
+    - "train"
   clean-all:
     - "clean-db"
-    - "clean"
+    - "clean-files"
 
 commands:
   - name: "install"
@@ -29,6 +33,8 @@ commands:
     script:
       - "python -m scripts.preprocess assets/${vars.dataset_name}.zip dataset/"
       - "python -m prodigy db-in-image ${vars.dataset_name} -F scripts/recipes/loaders.py"
+    deps:
+      - assets/${vars.dataset_name}.zip
 
   - name: "review"
     help: "Review hydrated annotations"
@@ -40,6 +46,8 @@ commands:
         dataset/${vars.dataset_name}.jsonl 
         --loader jsonl 
         --label question,answer,header,other
+    outputs:
+      - dataset/funsd.jsonl
 
   - name: "train"
     help: "Train FUNSD model"
@@ -47,6 +55,9 @@ commands:
       - >-
         python -m prodigy train-image ${vars.dataset_name} model/
         -F scripts/recipes/train.py --verbose --eval
+    output:
+      - model/checkpoint-500/
+      - model/checkpoint-1000/
 
   - name: "clean-db"
     help: "Drop all generated Prodigy datasets"
@@ -54,7 +65,7 @@ commands:
       - "prodigy drop ${vars.dataset_name}"
       - "prodigy drop ${vars.dataset_name}-debug"
 
-  - name: "clean"
+  - name: "clean-files"
     help: "Clean all intermediary files"
     script:
       - "sh -c 'rm -rf assets/*'"
