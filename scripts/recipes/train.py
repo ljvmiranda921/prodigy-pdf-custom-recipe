@@ -43,6 +43,9 @@ def train_image(
     eval: bool = False,
     verbose: bool = False,
 ):
+    """
+    Train a LayoutLMv3 model from a dataset.
+    """
     DB = db.connect()
     examples = get_examples(DB, set_id=dataset)
     hf_dataset = examples_to_hf_dataset(examples)

@@ -85,7 +85,8 @@ def db_in_image(
     answer: str = "accept",
     encode_b64: bool = False,
 ):
-    """Import annotations to the database
+    """
+    Import annotations to the database
 
     This assumes that the filename of the annotations is the same as the
     filename of the images. The images can be encoded into their base-64
