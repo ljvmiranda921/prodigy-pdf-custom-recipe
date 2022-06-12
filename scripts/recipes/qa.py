@@ -4,10 +4,7 @@ from pathlib import Path
 from typing import Iterable, List, Optional, Union, Dict
 
 from wasabi import msg
-
-from scripts.infer_utils import infer, load_model
-from scripts.train_utils import examples_to_hf_dataset
-from scripts.recipes.loaders import get_image, get_labels, create_task
+from scripts.infer_utils import infer
 
 try:
     import prodigy
@@ -18,11 +15,14 @@ except ImportError:
     msg.fail("No installation of prodigy found", exits=1)
 
 
-def make_tasks(model_path: str, stream: StreamType) -> StreamType:
-    """Add a 'spans' key to each example, with predicted entities."""
-    # model = load_model(model_path)
-    examples = examples_to_hf_dataset(list(stream), test_size=1.0)
-    breakpoint()
+def make_labels(model_path: str, stream: StreamType) -> StreamType:
+    """Add the predicted labels in the 'labels' key of the image spans"""
+    predictions = infer(model_path, list(stream))
+
+    for eg, pred in zip(stream, predictions):
+        task = copy.deepcopy(eg)
+        task["spans"]["labels"] = pred
+        yield task
 
 
 def make_bboxes(bbox_path: str, stream: StreamType) -> StreamType:
@@ -37,9 +37,8 @@ def make_bboxes(bbox_path: str, stream: StreamType) -> StreamType:
     for eg in stream:
         task = copy.deepcopy(eg)
         # The filename of the task (without extension) is in the 'text' key
-        labels = _get_labels(task["text"])
-        breakpoint()
-        task["spans"] = [{"bbox": labels["box"], "text": labels["text"]}]
+        label = _get_labels(task["text"])
+        task["spans"] = [{"bbox": a["box"], "text": a["text"]} for a in label["form"]]
         yield task
 
 
@@ -70,9 +69,11 @@ def qa(
     # Much of the proceeding blocks of code is based from image.manual
     # Source: https://github.com/explosion/prodigy-recipes/blob/master/image/image_manual.py
     stream = Images(source)
+    # Update the stream to add bounding boxes (based from annotations) and labels (based from the
+    # finetuned model). It's possible to update the make_bboxes function and replace it with an
+    # actual OCR engine. For now, we'll just use what's been annotated.
     stream = make_bboxes(bbox_path, stream)
-    breakpoint()
-    make_tasks(model_path, stream)
+    stream = make_labels(model_path, stream)
 
     return {
         "view_id": "image_manual",  # Annotation interface to use
