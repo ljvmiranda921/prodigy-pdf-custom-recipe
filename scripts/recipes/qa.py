@@ -1,7 +1,7 @@
 import copy
 import json
 from pathlib import Path
-from typing import Dict, Iterable, List, Optional, Union
+from typing import Dict, List, Optional
 
 from wasabi import msg
 
