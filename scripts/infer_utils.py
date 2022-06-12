@@ -1,9 +1,11 @@
 import os
-from typing import List, Dict
-from transformers import LayoutLMv3ForTokenClassification, LayoutLMv3Processor
-from PIL import Image
-from wasabi import msg
+from typing import Dict, List, Tuple
+
 import numpy as np
+from PIL import Image
+from tqdm import tqdm
+from transformers import LayoutLMv3ForTokenClassification, LayoutLMv3Processor
+from wasabi import msg
 
 from scripts.constants import BASE_MODEL
 
@@ -29,7 +31,10 @@ def _unnormalize_box(bbox, width, height):
     ]
 
 
-def infer(model_path: str, examples: List[Dict], labels: List[str]) -> List[str]:
+def infer(
+    model_path: str, examples: List[Dict], labels: List[str]
+) -> Tuple[List, List]:
+    msg.info(f"Performing inference using the model at {model_path}")
     model = _load_model(model_path)
     processor = _load_processor()
     id2label = {v: k for v, k in enumerate(labels)}
@@ -42,7 +47,7 @@ def infer(model_path: str, examples: List[Dict], labels: List[str]) -> List[str]
         f"Tokenizer parallelism: {os.environ.get('TOKENIZERS_PARALLELISM', 'true')}"
     )
 
-    for eg in examples:
+    for eg in tqdm(examples):
         image = Image.open(eg["path"]).convert("RGB")
         width, height = image.size
 
@@ -80,4 +85,4 @@ def infer(model_path: str, examples: List[Dict], labels: List[str]) -> List[str]
         all_preds.append(true_predictions)
         all_bboxes.append(true_boxes)
 
-    breakpoint()
+    return (all_preds, all_bboxes)
