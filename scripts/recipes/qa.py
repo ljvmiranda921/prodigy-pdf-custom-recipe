@@ -13,7 +13,7 @@ try:
     import prodigy
     from prodigy.components.loaders import Images
     from prodigy.types import StreamType
-    from prodigy.util import get_labels, split_string, set_hashes
+    from prodigy.util import get_labels, set_hashes, split_string
 except ImportError:
     msg.fail("No installation of prodigy found", exits=1)
 
