@@ -56,7 +56,7 @@ commands:
       - >-
         python3 -m prodigy train-image ${vars.dataset_name} model/
         -F scripts/recipes/train.py --verbose --eval
-    output:
+    outputs:
       - model/checkpoint-500/
       - model/checkpoint-1000/
 
