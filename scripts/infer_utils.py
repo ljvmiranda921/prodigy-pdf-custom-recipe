@@ -1,3 +1,4 @@
+import os
 from typing import List, Dict
 from transformers import LayoutLMv3ForTokenClassification, LayoutLMv3Processor
 from PIL import Image
@@ -35,6 +36,12 @@ def infer(model_path: str, examples: List[Dict], labels: List[str]) -> List[str]
 
     all_preds = []
     all_bboxes = []
+
+    os.environ["TOKENIZERS_PARALLELISM"] = "false"
+    msg.info(
+        f"Tokenizer parallelism: {os.environ.get('TOKENIZERS_PARALLELISM', 'true')}"
+    )
+
     for eg in examples:
         image = Image.open(eg["path"]).convert("RGB")
         width, height = image.size
