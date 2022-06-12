@@ -32,17 +32,17 @@ commands:
   - name: "hydrate-db"
     help: "Hydrate the Prodigy database with annotated data from FUNSD"
     script:
-      - "python -m scripts.preprocess assets/${vars.dataset_name}.zip dataset/"
-      - "python -m prodigy db-in-image ${vars.dataset_name} -F scripts/recipes/loaders.py"
+      - "python3 -m scripts.preprocess assets/${vars.dataset_name}.zip dataset/"
+      - "python3 -m prodigy db-in-image ${vars.dataset_name} -F scripts/recipes/loaders.py"
     deps:
       - assets/${vars.dataset_name}.zip
 
   - name: "review"
     help: "Review hydrated annotations"
     script:
-      - "python -m prodigy db-out ${vars.dataset_name} dataset"
+      - "python3 -m prodigy db-out ${vars.dataset_name} dataset"
       - >-
-        python -m prodigy image.manual 
+        python3 -m prodigy image.manual 
         ${vars.dataset_name}-debug 
         dataset/${vars.dataset_name}.jsonl 
         --loader jsonl 
@@ -54,7 +54,7 @@ commands:
     help: "Train FUNSD model"
     script:
       - >-
-        python -m prodigy train-image ${vars.dataset_name} model/
+        python3 -m prodigy train-image ${vars.dataset_name} model/
         -F scripts/recipes/train.py --verbose --eval
     output:
       - model/checkpoint-500/
