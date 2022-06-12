@@ -27,6 +27,7 @@ commands:
     help: "Install dependencies"
     script:
       - "pip install --user -r requirements.txt"
+      - "sudo apt install tesseract-ocr -y"
 
   - name: "hydrate-db"
     help: "Hydrate the Prodigy database with annotated data from FUNSD"
