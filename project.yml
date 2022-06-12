@@ -60,6 +60,21 @@ commands:
       - model/checkpoint-500/
       - model/checkpoint-1000/
 
+  - name: "qa"
+    help: "Perform QA for the test dataset using a trained model"
+    script:
+      - >-
+        python3 -m prodigy image.qa ${vars.dataset_name}-qa
+        dataset/dataset/testing_data/images
+        dataset/dataset/testing_data/annotations
+        model/checkpoint-1000/
+        --label other,header,question,answer
+        -F scripts/recipes/qa.py
+    deps:
+      - model/checkpoint-1000/
+      - dataset/dataset/testing_data/images
+      - dataset/dataset/testing_data/annotations
+
   - name: "clean-db"
     help: "Drop all generated Prodigy datasets"
     script:
