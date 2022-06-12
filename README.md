@@ -19,8 +19,10 @@ Commands are only re-run if their inputs have changed.
 | `install` | Install dependencies |
 | `hydrate-db` | Hydrate the Prodigy database with annotated data from FUNSD |
 | `review` | Review hydrated annotations |
+| `train` | Train FUNSD model |
+| `qa` | Perform QA for the test dataset using a trained model |
 | `clean-db` | Drop all generated Prodigy datasets |
-| `clean` | Clean all intermediary files |
+| `clean-files` | Clean all intermediary files |
 
 ### ⏭ Workflows
 
@@ -31,7 +33,8 @@ inputs have changed.
 
 | Workflow | Steps |
 | --- | --- |
-| `clean-all` | `clean-db` &rarr; `clean` |
+| `all` | `install` &rarr; `hydrate-db` &rarr; `train` |
+| `clean-all` | `clean-db` &rarr; `clean-files` |
 
 ### 🗂 Assets
 
