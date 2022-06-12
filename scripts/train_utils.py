@@ -18,7 +18,9 @@ except ImportError:
 from scripts.constants import BASE_MODEL, CLASS_NAMES
 
 
-def examples_to_hf_dataset(examples: List[TaskType], test_size: float = 0.2) -> Dataset:
+def examples_to_hf_dataset(
+    examples: List[TaskType], test_size: float = 0.2, image_key: str = "image"
+) -> Dataset:
     """Convert a list of Prodigy examples into a dataset"""
     features = Features(
         {
@@ -38,7 +40,7 @@ def examples_to_hf_dataset(examples: List[TaskType], test_size: float = 0.2) -> 
         "tokens": [[span["text"] for span in eg["spans"]] for eg in examples],
         "bboxes": [[span["bbox"] for span in eg["spans"]] for eg in examples],
         "ner_tags": [[CLASS_NAMES.index(span["label"]) for span in eg["spans"]] for eg in examples],
-        "image": [PILImage.open(eg["image"]).convert("RGB") for eg in examples],
+        "image": [PILImage.open(eg[image_key]).convert("RGB") for eg in examples],
         # fmt: on
     }
 
