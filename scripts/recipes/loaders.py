@@ -35,7 +35,7 @@ def get_ids(reference: Path) -> List:
 def get_image(id: str, encode_b64: bool, images_dir: Union[Path, str]) -> str:
     """Get the image and return its path or base64 representation"""
     image_fp = images_dir / f"{id}.png"
-    with open(image_fp, "rb") as f:
+    with image_fp.open("rb") as f:
         img = f.read()
     source = base64.encodebytes(img).decode("utf-8") if encode_b64 else str(image_fp)
     return source
@@ -44,7 +44,7 @@ def get_image(id: str, encode_b64: bool, images_dir: Union[Path, str]) -> str:
 def get_labels(id: str, labels_dir: Union[Path, str]) -> Dict:
     """Get the labels given a file ID"""
     annot_fp = labels_dir / f"{id}.json"
-    with open(annot_fp) as f:
+    with annot_fp.open() as f:
         annot = json.load(f)
     return annot
 
