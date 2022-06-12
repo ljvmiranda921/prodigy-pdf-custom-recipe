@@ -1,7 +1,8 @@
 import os
-from typing import Dict, List, Tuple
+from typing import Dict, List, Tuple, Any
 
 import numpy as np
+import torch.nn.functional as nn
 from PIL import Image
 from tqdm import tqdm
 from transformers import LayoutLMv3ForTokenClassification, LayoutLMv3Processor
@@ -31,8 +32,14 @@ def _unnormalize_box(bbox, width, height):
     ]
 
 
+def _filter(
+    values: List[Any], probabilities: List[float], threshold: float
+) -> List[Any]:
+    return [value for probs, value in zip(probabilities, values) if probs >= threshold]
+
+
 def infer(
-    model_path: str, examples: List[Dict], labels: List[str]
+    model_path: str, examples: List[Dict], labels: List[str], threshold: float
 ) -> Tuple[List, List]:
     msg.info(f"Performing inference using the model at {model_path}")
     model = _load_model(model_path)
@@ -65,9 +72,14 @@ def infer(
         # Perform forward pass
         outputs = model(**encoding)
 
-        # Get the predictions
-        predictions = outputs.logits.argmax(-1).squeeze().tolist()
-        token_boxes = encoding.bbox.squeeze().tolist()
+        # Get the predictions and probabilities
+        probs = nn.softmax(outputs.logits.squeeze(), dim=1).max(dim=1).values.tolist()
+        _predictions = outputs.logits.argmax(-1).squeeze().tolist()
+        _token_boxes = encoding.bbox.squeeze().tolist()
+
+        # Filter the predictions and bounding boxes based on a threshold
+        predictions = _filter(_predictions, probs, threshold)
+        token_boxes = _filter(_token_boxes, probs, threshold)
 
         # Only keep non-subword predictions
         is_subword = np.array(offset_mapping.squeeze().tolist())[:, 0] != 0

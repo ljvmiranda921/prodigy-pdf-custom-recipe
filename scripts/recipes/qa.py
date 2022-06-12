@@ -35,10 +35,12 @@ def make_bboxes(bbox_path: str, stream: StreamType) -> StreamType:
         yield task
 
 
-def make_labels(model_path: str, stream: StreamType) -> StreamType:
+def make_labels(model_path: str, stream: StreamType, threshold: float) -> StreamType:
     """Add the predicted labels in the 'labels' key of the image spans"""
     examples = list(stream)
-    predictions = infer(model_path, examples=examples, labels=CLASS_NAMES)
+    predictions = infer(
+        model_path, examples=examples, labels=CLASS_NAMES, threshold=threshold
+    )
     labels, bboxes = predictions
 
     for eg, label, bbox in zip(examples, labels, bboxes):
@@ -60,6 +62,7 @@ def make_labels(model_path: str, stream: StreamType) -> StreamType:
     model_path=("Path to the finetuned model for inference", "positional", None, str),
     label=("Comma-separated label(s) to annotate or text file with one label per line", "option", "l", get_labels),
     exclude=("Comma-separated list of dataset IDs whose annotations to exclude", "option", "e", split_string),
+    threshold=("Threshold to filter the predictions (0 - 1)", "option", "t", float),
     darken=("Darken image to make boxes stand out more", "flag", "D", bool),
     # fmt: on
 )
@@ -70,6 +73,7 @@ def qa(
     model_path: str,
     label: Optional[List[str]] = None,
     exclude: Optional[List[str]] = None,
+    threshold: int = 0.9,
     darken: bool = False,
 ):
     """
@@ -82,7 +86,7 @@ def qa(
     # finetuned model). It's possible to update the make_bboxes function and replace it with an
     # actual OCR engine. For now, we'll just use what's been annotated.
     stream = make_bboxes(bbox_path, stream)
-    stream = make_labels(model_path, stream)
+    stream = make_labels(model_path, stream, threshold)
 
     return {
         "view_id": "image_manual",  # Annotation interface to use
