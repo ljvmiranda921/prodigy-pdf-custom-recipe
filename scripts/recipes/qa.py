@@ -1,29 +1,21 @@
 import copy
 import json
 from pathlib import Path
-from typing import Iterable, List, Optional, Union, Dict
+from typing import Dict, Iterable, List, Optional, Union
 
 from wasabi import msg
-from scripts.infer_utils import infer
+
 from scripts.constants import CLASS_NAMES
+from scripts.infer_utils import infer
+from scripts.recipes.loaders import _to_poly
 
 try:
     import prodigy
     from prodigy.components.loaders import Images
     from prodigy.types import StreamType
-    from prodigy.util import split_string, get_labels
+    from prodigy.util import get_labels, split_string, set_hashes
 except ImportError:
     msg.fail("No installation of prodigy found", exits=1)
-
-
-def make_labels(model_path: str, stream: StreamType) -> StreamType:
-    """Add the predicted labels in the 'labels' key of the image spans"""
-    predictions = infer(model_path, examples=list(stream), labels=CLASS_NAMES)
-
-    for eg, pred in zip(stream, predictions):
-        task = copy.deepcopy(eg)
-        task["spans"]["labels"] = pred
-        yield task
 
 
 def make_bboxes(bbox_path: str, stream: StreamType) -> StreamType:
@@ -40,6 +32,22 @@ def make_bboxes(bbox_path: str, stream: StreamType) -> StreamType:
         # The filename of the task (without extension) is in the 'text' key
         label = _get_labels(task["text"])
         task["spans"] = [{"bbox": a["box"], "text": a["text"]} for a in label["form"]]
+        yield task
+
+
+def make_labels(model_path: str, stream: StreamType) -> StreamType:
+    """Add the predicted labels in the 'labels' key of the image spans"""
+    examples = list(stream)
+    predictions = infer(model_path, examples=examples, labels=CLASS_NAMES)
+    labels, bboxes = predictions
+
+    for eg, label, bbox in zip(examples, labels, bboxes):
+        task = copy.deepcopy(eg)
+        # Repace the spans with predicted values
+        task["spans"] = [
+            {"points": _to_poly(b), "label": l} for l, b in zip(label, bbox)
+        ]
+        task = set_hashes(task)
         yield task
 
 
