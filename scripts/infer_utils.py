@@ -1,16 +1,19 @@
 from typing import List, Dict
 from transformers import LayoutLMv3ForTokenClassification, LayoutLMv3Processor
 from PIL import Image
+from wasabi import msg
 
 from scripts.constants import BASE_MODEL
 
 
 def _load_model(model_path: str):
+    msg.text(f"Loading model from {model_path}")
     model = LayoutLMv3ForTokenClassification.from_pretrained(model_path)
     return model
 
 
 def _load_processor(model: str = BASE_MODEL):
+    msg.text(f"Loading processor {model}")
     processor = LayoutLMv3Processor.from_pretrained(model)
     return processor
 
