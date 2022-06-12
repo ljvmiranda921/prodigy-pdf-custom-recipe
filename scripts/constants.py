@@ -11,3 +11,6 @@ TRAIN_LABELS = TRAIN_DATA / "annotations"
 TEST_DATA = DATASET_PATH / "testing_data"
 TEST_IMAGES = TEST_DATA / "images"
 TEST_LABELS = TEST_DATA / "annotations"
+
+BASE_MODEL = "microsoft/layoutlmv3-base"
+CLASS_NAMES = ["other", "header", "question", "answer"]

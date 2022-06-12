@@ -15,7 +15,7 @@ except ImportError:
     msg.fail("No installation of prodigy found", exits=1)
 
 
-CLASS_NAMES = ["other", "header", "question", "answer"]
+from scripts.constants import BASE_MODEL, CLASS_NAMES
 
 
 def examples_to_hf_dataset(examples: List[TaskType], test_size: float = 0.2) -> Dataset:
@@ -48,7 +48,7 @@ def examples_to_hf_dataset(examples: List[TaskType], test_size: float = 0.2) -> 
     return dataset
 
 
-def preprocess_dataset(dataset: Dataset, model: str = "microsoft/layoutlmv3-base"):
+def preprocess_dataset(dataset: Dataset, model: str = BASE_MODEL):
     """Preprocess the whole dataset to make it compatible with the LayoutLMv3 model
 
     Source: https://github.com/NielsRogge/Transformers-Tutorials/blob/master/LayoutLMv3/Fine_tune_LayoutLMv3_on_FUNSD_(HuggingFace_Trainer).ipynb
@@ -187,7 +187,7 @@ def setup_trainer(
     metric_for_best_model: str = "f1",
 ) -> Trainer:
     model = LayoutLMv3ForTokenClassification.from_pretrained(
-        "microsoft/layoutlmv3-base", id2label=id2label, label2id=label2id
+        BASE_MODEL, id2label=id2label, label2id=label2id
     )
 
     training_args = TrainingArguments(
