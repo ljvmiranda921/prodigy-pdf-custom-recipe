@@ -6,3 +6,4 @@ spacy
 typer
 seqeval
 Pillow
+pytesseract
