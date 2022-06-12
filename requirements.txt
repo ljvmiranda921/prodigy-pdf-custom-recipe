@@ -7,3 +7,4 @@ typer
 seqeval
 Pillow
 pytesseract
+tqdm
