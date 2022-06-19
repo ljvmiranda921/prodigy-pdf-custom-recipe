@@ -54,7 +54,7 @@ def make_labels(model_path: str, stream: StreamType, threshold: float) -> Stream
 
 
 @prodigy.recipe(
-    "image.qa",
+    "image.correct",
     # fmt: off
     dataset=("Dataset to save annotations to", "positional", None, str),
     source=("Data to qa/annotate (directory of images, file path or '-' to read from standard input)", "positional", None, str),

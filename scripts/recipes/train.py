@@ -29,7 +29,7 @@ def get_examples(database: db.Database, set_id: str) -> List[TaskType]:
 
 
 @prodigy.recipe(
-    "train-image",
+    "image.train",
     dataset=("Dataset to train the model on", "positional", None, str),
     output_dir=("Output directory for the trained pipeline", "positional", None, str),
     dry_run=("Disable training", "flag", "D", bool),

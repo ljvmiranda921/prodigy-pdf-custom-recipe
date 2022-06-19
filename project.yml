@@ -70,7 +70,7 @@ commands:
     help: "Train FUNSD model"
     script:
       - >-
-        python3 -m prodigy train-image ${vars.dataset_name} model/
+        python3 -m prodigy image.train ${vars.dataset_name} model/
         -F scripts/recipes/train.py --verbose --eval
     outputs:
       - model/checkpoint-500/
@@ -80,7 +80,7 @@ commands:
     help: "Perform QA for the test dataset using a trained model"
     script:
       - >-
-        python3 -m prodigy image.qa ${vars.dataset_name}-qa
+        python3 -m prodigy image.correct ${vars.dataset_name}-qa
         dataset/dataset/testing_data/images
         dataset/dataset/testing_data/annotations
         model/checkpoint-1000/
