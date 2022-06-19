@@ -14,7 +14,7 @@ documents.
 This also serves as an illustration of how to design document processing
 solutions. I attempted to generalize this approach into a framework, which you
 can read more [from my
-blog.](https://ljvmiranda921.github.io/notebook/2022/07/02/a-document-processing-framework/)
+blog.](https://ljvmiranda921.github.io/notebook/2022/06/19/document-processing-framework/)
 
 ![](docs/design_framework.png)
 
