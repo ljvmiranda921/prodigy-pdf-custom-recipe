@@ -16,7 +16,7 @@ solutions. I attempted to generalize this approach into a framework, which you
 can read more [from my
 blog.](https://ljvmiranda921.github.io/notebook/2022/06/19/document-processing-framework/)
 
-![](docs/design_framework.png)
+![](docs/design_principles.png)
 
 
 ## 📋 project.yml
